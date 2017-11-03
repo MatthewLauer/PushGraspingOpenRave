@@ -64,10 +64,10 @@ class handMover:
         h = env.drawlinelist(array([Tee[0:3,3],Tee[0:3,3]+direction*steps*stepsize]),1)
         try:
             #IPython.embed()
-            success = basemanip.MoveHandStraight(direction=direction,starteematrix=Tee,stepsize=stepsize,minsteps=steps-1,maxsteps=steps)
+            success = basemanip.MoveHandStraight(direction=direction,starteematrix=Tee,stepsize=stepsize,minsteps=steps-1,maxsteps=steps,outputtraj = True)
             params = (direction,Tee)
             h = env.drawlinelist(array([Tee[0:3,3],Tee[0:3,3]+direction*steps*stepsize]),4,[0,0,1])
             robot.WaitForController(0)
-            return True
+            return success
         except planning_error,e:
-            return False
+            return None
