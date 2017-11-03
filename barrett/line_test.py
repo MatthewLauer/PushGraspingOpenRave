@@ -12,7 +12,8 @@ if __name__ == "__main__":
     with env:
         body = RaveCreateKinBody(env,'')
         body.SetName("box");
-        body.InitFromBoxes(numpy.array([[0,0,0,5.1,0.2,0.3]]), True)
+        body.InitFromBoxes(numpy.array([[0,0,0,.1,0.05,0.075]]), True)
+        body.SetTransform(numpy.array([[1,0,0,-.75],[0,1,0,1.0],[0,0,1,1.2], [0,0,0,1]]))
         env.AddKinBody(body)
 
     viewer = env.GetViewer()
@@ -26,6 +27,7 @@ if __name__ == "__main__":
     lex.movehandstraight(env, direction, Tee)
 
     PSM = PushStateMachine(env)
+    PSM.GetPoses(env.GetKinBody('box'),1,1,1)
     import IPython
     IPython.embed()
 
