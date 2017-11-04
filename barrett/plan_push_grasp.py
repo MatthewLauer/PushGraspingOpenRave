@@ -18,6 +18,16 @@ def minAperture(objectRadius):
 			return handDegree - 1
 
 
+def angleToFullHandWidth(handDegree):
+	lengthHandCenter = 0.05 # 50 mm
+	lengthBaseFinger = 0.07 # 70 mm
+	lengthFingerEnd = 0.058 # 58 mm
+
+	fingerDegree = handDegree + handDegree*45/140 + 40	# maybe 48/140 + 52
+	handRadian = math.radians(handDegree)
+	fingerRadian = math.radians(fingerDegree)
+	return 2*(lengthHandCenter + lengthBaseFinger * math.cos(handRadian) + lengthFingerEnd * math.cos(fingerRadian))
+
 def captureRegion(objectRadius, handDegree):
 	# handDegree is within 0 and 140 degrees
 	# 0 degrees means the hand is fully open and 140 degrees means the hand is fully closed
@@ -81,7 +91,7 @@ def captureRegion(objectRadius, handDegree):
 	return (maxX, maxZ, array)
 
 
-#def IsInCaptureRegion(p, a, gSamples_i, c):
+# def IsInCaptureRegion(p, a, gSamples_i, c):
 
 	#Use the capture region and check to see if the point is within the polygon of the capture region
 
@@ -89,7 +99,9 @@ def captureRegion(objectRadius, handDegree):
 #def PlanPushGrasp(goalObject, obstacleObjects):
 
 if __name__ == "__main__":
-	maxDegree = minAperture(0)
-	print maxDegree
-	(maxX, maxZ, captureregion) = captureRegion(0.01, 45)
-	np.savetxt("test.txt", captureregion, fmt='%d')
+	#maxDegree = minAperture(0.1)
+	#print maxDegree
+	width = angleToFullHandWidth(0)
+	print width
+	#(maxX, maxZ, captureregion) = captureRegion(0.01, 30)
+	#np.savetxt("test.txt", captureregion, fmt='%d')
