@@ -7,6 +7,7 @@ def minAperture(objectRadius):
 	lengthHandCenter = 0.05 # 50 mm
 	lengthBaseFinger = 0.07 # 70 mm
 	lengthFingerEnd = 0.058 # 58 mm
+	fingerBaseTipOffset = 0.003 # 3 mm
 
 	# max object radius is 0.1557m
 	# 87 degrees is the max handDegree when objectRadius = 0
@@ -14,7 +15,7 @@ def minAperture(objectRadius):
 		fingerDegree = handDegree + handDegree*45/140 + 40	# maybe 48/140 + 52
 		handRadian = math.radians(handDegree)
 		fingerRadian = math.radians(fingerDegree)
-		if(lengthHandCenter + lengthBaseFinger * math.cos(handRadian) + lengthFingerEnd * math.cos(fingerRadian) < objectRadius):
+		if(lengthHandCenter + lengthBaseFinger * math.cos(handRadian) - fingerBaseTipOffset * math.sin(handRadian) + lengthFingerEnd * math.cos(fingerRadian) < objectRadius):
 			return handDegree - 1
 
 
@@ -22,11 +23,12 @@ def angleToFullHandWidth(handDegree):
 	lengthHandCenter = 0.05 # 50 mm
 	lengthBaseFinger = 0.07 # 70 mm
 	lengthFingerEnd = 0.058 # 58 mm
+	fingerBaseTipOffset = 0.003 # 3 mm
 
 	fingerDegree = handDegree + handDegree*45/140 + 40	# maybe 48/140 + 52
 	handRadian = math.radians(handDegree)
 	fingerRadian = math.radians(fingerDegree)
-	return 2*(lengthHandCenter + lengthBaseFinger * math.cos(handRadian) + lengthFingerEnd * math.cos(fingerRadian))
+	return 2*(lengthHandCenter + lengthBaseFinger * math.cos(handRadian) - fingerBaseTipOffset * math.sin(handRadian) + lengthFingerEnd * math.cos(fingerRadian))
 
 def captureRegion(objectRadius, handDegree):
 	# handDegree is within 0 and 140 degrees
@@ -53,7 +55,7 @@ def captureRegion(objectRadius, handDegree):
 	rightBaseFingerEndX = rightBaseFingerStartX + rightBaseFingerXDif
 	rightBaseFingerEndZ  = rightBaseFingerStartZ + rightBaseFingerZDif
 
-	rightFingerTipStartX = rightBaseFingerEndX + fingerBaseTipOffset * math.sin(handRadian)
+	rightFingerTipStartX = rightBaseFingerEndX - fingerBaseTipOffset * math.sin(handRadian)
 	rightFingerTipStartZ = rightBaseFingerEndZ + fingerBaseTipOffset * math.cos(handRadian)
 
 	rightFingerTipXDif = lengthFingerEnd * math.cos(fingerRadian)
