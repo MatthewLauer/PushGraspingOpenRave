@@ -42,6 +42,7 @@ def captureRegion(objectRadius, handDegree):
 	lengthHandCenter = 0.05 # 50 mm
 	lengthBaseFinger = 0.07 # 70 mm
 	lengthFingerEnd = 0.058 # 58 mm
+	fingerBaseTipOffset = 0.003 # 3 mm
 
 	rightBaseFingerStartX = lengthHandCenter;
 	rightBaseFingerStartZ = 0;
@@ -52,24 +53,27 @@ def captureRegion(objectRadius, handDegree):
 	rightBaseFingerEndX = rightBaseFingerStartX + rightBaseFingerXDif
 	rightBaseFingerEndZ  = rightBaseFingerStartZ + rightBaseFingerZDif
 
-	rightFingerEndXDif = lengthFingerEnd * math.cos(fingerRadian)
-	rightFingerEndZDif = lengthFingerEnd * math.sin(fingerRadian)
+	rightFingerTipStartX = rightBaseFingerEndX + fingerBaseTipOffset * math.sin(handRadian)
+	rightFingerTipStartZ = rightBaseFingerEndZ + fingerBaseTipOffset * math.cos(handRadian)
 
-	rightFingerTipX = rightBaseFingerEndX + rightFingerEndXDif
-	rightFingerTipZ = rightBaseFingerEndZ + rightFingerEndZDif
+	rightFingerTipXDif = lengthFingerEnd * math.cos(fingerRadian)
+	rightFingerTipZDif = lengthFingerEnd * math.sin(fingerRadian)
+
+	rightFingerTipEndX = rightFingerTipStartX + rightFingerTipXDif
+	rightFingerTipEndZ = rightFingerTipStartZ + rightFingerTipZDif
 
 	# Using the distance of a point from a line formula here: https://en.wikipedia.org/wiki/Distance_from_a_point_to_a_line
 	rightBaseFingerDesiredDist = -objectRadius * lengthBaseFinger
 	rightFingerEndDesiredDist = -objectRadius * lengthFingerEnd
 
 	rightBaseFingerCrossProd = rightBaseFingerEndX * rightBaseFingerStartZ - rightBaseFingerEndZ * rightBaseFingerStartX
-	rightFingerEndCrossProd =  rightFingerTipX * rightBaseFingerEndZ - rightFingerTipZ * rightBaseFingerEndX
+	rightFingerEndCrossProd =  rightFingerTipEndX * rightFingerTipStartZ - rightFingerTipEndZ * rightFingerTipStartX
 
 	stepsize = 0.001 # 1 mm accuracy
 
 	Dmax = 1.0 # Max pushing distance (Set to 1m as in the paper)
-	maxZ = round(Dmax + rightFingerTipZ + stepsize, 3)
-	maxX = round(max(rightFingerTipX + stepsize, rightBaseFingerEndX + stepsize), 3)
+	maxZ = round(Dmax + rightFingerTipEndZ + stepsize, 3)
+	maxX = round(max(rightFingerTipEndX + stepsize, rightFingerTipStartX + stepsize), 3)
 
 	# The array will be symmetrical, so there is no need to replicate the negative x side
 	numArrayRows = int(maxZ / stepsize)
@@ -81,17 +85,19 @@ def captureRegion(objectRadius, handDegree):
 		for zInd in xrange(numArrayRows):
 			zCoord = zInd * stepsize
 
-			if((zCoord > objectRadius) and ((zCoord < rightFingerTipZ) or (xCoord < rightFingerTipX)) and
-			   ((zCoord > rightBaseFingerEndZ) or (rightBaseFingerZDif * xCoord - rightBaseFingerXDif * zCoord + rightBaseFingerCrossProd < rightBaseFingerDesiredDist)) and
-			   (math.sqrt((rightFingerTipX - xCoord)**2 + (rightFingerTipZ - zCoord)**2) > objectRadius) and
-			   (rightFingerEndZDif * xCoord - rightFingerEndXDif * zCoord + rightFingerEndCrossProd < 0) and
-			   ((zCoord > rightFingerTipZ) or (rightFingerEndZDif * xCoord - rightFingerEndXDif * zCoord + rightFingerEndCrossProd < rightFingerEndDesiredDist))):
-				array[zInd,xInd] = 1
+			if (zCoord > objectRadius):
+				if ((zCoord > rightFingerTipEndZ) and (xCoord < rightFingerTipEndX - objectRadius)):
+					array[zInd,xInd] = 1
+				elif ((rightBaseFingerZDif * xCoord - rightBaseFingerXDif * zCoord + rightBaseFingerCrossProd < rightBaseFingerDesiredDist) and
+			   		  (math.sqrt((rightFingerTipEndX - xCoord)**2 + (rightFingerTipEndZ - zCoord)**2) > objectRadius) and
+			   		  (rightFingerTipZDif * xCoord - rightFingerTipXDif * zCoord + rightFingerEndCrossProd < 0) and
+			   		  ((zCoord > rightFingerTipEndZ) or (rightFingerTipZDif * xCoord - rightFingerTipXDif * zCoord + rightFingerEndCrossProd < rightFingerEndDesiredDist))):
+					array[zInd,xInd] = 1
 
 	return (maxX, maxZ, array)
 
 
-# def IsInCaptureRegion(p, a, gSamples_i, c):
+#def IsInCaptureRegion(p, a, gSamples_i, c):
 
 	#Use the capture region and check to see if the point is within the polygon of the capture region
 
@@ -99,9 +105,10 @@ def captureRegion(objectRadius, handDegree):
 #def PlanPushGrasp(goalObject, obstacleObjects):
 
 if __name__ == "__main__":
+	# Test cases
 	#maxDegree = minAperture(0.1)
 	#print maxDegree
-	width = angleToFullHandWidth(0)
-	print width
-	#(maxX, maxZ, captureregion) = captureRegion(0.01, 30)
+	#width = angleToFullHandWidth(0)
+	#print width
+	#(maxX, maxZ, captureregion) = captureRegion(0.01, 45)
 	#np.savetxt("test.txt", captureregion, fmt='%d')
