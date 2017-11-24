@@ -178,17 +178,18 @@ if __name__ == "__main__":
 				#print pose
 				#print 'o: %f v: %f a: %f' % (o,v,a)
 				robot.SetActiveDOFValues(pose)
-				robottrans = robot.GetTransform()
+				robottrans = robot.GetManipulator("arm").GetTransform()
 				p = (robottrans[0][3], robottrans[1][3], v)
 				print "Hand Pose:"
 				print p
 				print "Goals Samples:"
 				for goalSample in goal:
-					#IPython.embed()
 					goalSampleTrans = goalSample.GetTransform()
 					gSamples = (goalSampleTrans[0][3], goalSampleTrans[1][3], 1)
 					print gSamples
 					print CR.isInCaptureRegion(p, a, gSamples)
+
+				IPython.embed()
 
 
 	IPython.embed() 
