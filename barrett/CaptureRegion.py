@@ -137,15 +137,15 @@ class CaptureRegion:
 			(x_max, z_max, captureRegion) = self.captureRegions[index]
 			
 			if(point_x > x_max or point_z > z_max):
-				return False
+				return (False, -1)
 
 			z_index = int(point_z * 1000)
 			x_index = int(point_x * 1000)
 
-			return captureRegion[z_index, x_index] == 1
+			return (captureRegion[z_index, x_index] == 1, max(0, 1 - (z_max - point_z)))
 
 		else:
-			return False
+			return (False, -1)
 
 
 if __name__ == "__main__":
