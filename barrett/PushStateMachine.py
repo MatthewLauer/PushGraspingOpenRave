@@ -42,7 +42,7 @@ class PushStateMachine:
 		
 		sol = self.ikmodel.manip.FindIKSolution(rotatedtrans, IkFilterOptions.IgnoreEndEffectorCollisions)
 		if sol is None:
-			print 'fail'
+			#print 'fail'
 			return None
 		#IPython.embed()
 		armPoses = numpy.empty([0,11])
@@ -52,7 +52,7 @@ class PushStateMachine:
 			#IPython.embed()
 			anysol = self.ikmodel.manip.FindIKSolution(rotatedtrans, IkFilterOptions.IgnoreEndEffectorCollisions)
 			if anysol is None:
-				print 'fail'
+				#print 'fail'
 				return None
 			if anysol is not None:
 				sol11DOF = numpy.append(anysol,self.robot.GetActiveDOFValues()[7:11])				
@@ -64,7 +64,7 @@ class PushStateMachine:
 				armPose = sol11DOF
 				self.robot.SetActiveDOFValues(sol11DOF)
 				#time.sleep(.1)
-				print 'success'
+				#print 'success'
 				break
 		return armPose
 
@@ -98,7 +98,7 @@ if __name__ == "__main__":
 	sigma = .015
 	CR = CaptureRegion(goalRadius+2*sigma)
 	#More Initialization							+
-	bodySampleSize = 20
+	bodySampleSize = 3
 
     #sample obstacles								+
 	body = []
@@ -164,6 +164,7 @@ if __name__ == "__main__":
 		(CR.angleToFullHandWidth(0)-CR.angleToFullHandWidth(minAperture)), num=oStepCount*2+1)
 	vSteps = numpy.linspace(0,2*math.pi, num = vStepCount, endpoint = False)
 	aSteps = numpy.linspace(0,minAperture,num = aStepCount)
+
 	CR.initializeCaptureRegions(aSteps)
 	#Loop through offset parameters a,v,o 			-
 	import IPython			
@@ -174,15 +175,19 @@ if __name__ == "__main__":
 				if(pose is None):
 					continue
 
-				print pose
-				print 'o: %f v: %f a: %f' % (o,v,a)
+				#print pose
+				#print 'o: %f v: %f a: %f' % (o,v,a)
 				robot.SetActiveDOFValues(pose)
 				robottrans = robot.GetTransform()
 				p = (robottrans[0][3], robottrans[1][3], v)
+				print "Hand Pose:"
+				print p
+				print "Goals Samples:"
 				for goalSample in goal:
-					IPython.embed()
+					#IPython.embed()
 					goalSampleTrans = goalSample.GetTransform()
 					gSamples = (goalSampleTrans[0][3], goalSampleTrans[1][3], 1)
+					print gSamples
 					print CR.isInCaptureRegion(p, a, gSamples)
 
 
