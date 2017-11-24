@@ -148,7 +148,7 @@ class CaptureRegion:
 
 
 if __name__ == "__main__":
-	#cr = CaptureRegion(0.1) 
+	cr = CaptureRegion(0.1) 
 	#print cr.minAperture
 	#cr.initializeCaptureRegions([0, 5, 10, 15, 20, 25, 30])
 	#print cr.isInCaptureRegion([1,1,45], 5, np.transpose(np.array([1.5,1.5,1])))

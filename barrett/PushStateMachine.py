@@ -7,6 +7,7 @@ import numpy
 import IPython
 import time
 import math
+from CaptureRegion import CaptureRegion
 
 class PushStateMachine:
 
@@ -28,67 +29,44 @@ class PushStateMachine:
     #Takes an object in the scene and returns an array of tuples 
     # with suggested hand pose (x, y, theta)
     # kinboayd is the object you want 
-    def GetPoses(self, kinbody, minAperture, vStepCount=20,  oStepCount=1, backwardincrement = .01):
-        print 'getting params'#does nothign
-        trans = kinbody.GetTransform()
-        sol = numpy.array([0,0,0,0,0,0,0])#7Dof
-        oSteps = numpy.linspace(-(self._ApetureAngleToDistance(0)-self._ApetureAngleToDistance(minAperture)),
-        	(self._ApetureAngleToDistance(0)-self._ApetureAngleToDistance(minAperture)), num=oStepCount*2+1)
-        vSteps = numpy.linspace(0,2*math.pi, num = vStepCount, endpoint = False)
-        aSteps = numpy.linspace(0,minAperture,num = round(abs(0-minAperture)/.2));
-        armPoses = numpy.empty([0,11])
-
-        #IPython.embed()
-        #aSteps = [2]
-        #oSteps = [0]
-        #vSteps = [0]
-        for o in oSteps:
-        	for v in vSteps:
-        		for a in aSteps:
-        			dofs = self.robot.GetActiveDOFValues()
-        			dofs[7] = a;
-        			dofs[8] = a;
-        			dofs[9] = a;
-        			self.robot.SetActiveDOFValues(dofs)
-        			rotatedtrans = numpy.array(trans)
-        			rotatedtrans[0:3,0:3] = numpy.dot(matrixFromAxisAngle([0,0,v])[0:3,0:3], trans[0:3,0:3])
-        			rotatedtrans[1][3] = rotatedtrans[1][3] + math.sin(v)*o        			
-        			rotatedtrans[0][3] = rotatedtrans[0][3] + math.cos(v)*o        			
-					
-        			print 'o: %f v: %f a: %f' % (o,v,a)
-        			sol = self.ikmodel.manip.FindIKSolution(rotatedtrans, IkFilterOptions.IgnoreEndEffectorCollisions)
-        			if sol is None:
-        				print 'fail'
-        				break;
-        			#IPython.embed()
-        			while True:
-        				rotatedtrans[1][3] = rotatedtrans[1][3] + math.cos(v)*backwardincrement      			
-        				rotatedtrans[0][3] = rotatedtrans[0][3] - math.sin(v)*backwardincrement        			
-        				#IPython.embed()
-        				anysol = self.ikmodel.manip.FindIKSolution(rotatedtrans, IkFilterOptions.IgnoreEndEffectorCollisions)
-        				if anysol is None:
-        					print 'fail'
-        					break
-        				if anysol is not None:
-        					sol11DOF = numpy.append(anysol,self.robot.GetActiveDOFValues()[7:11])				
-        					self.robot.SetActiveDOFValues(sol11DOF)
-        					time.sleep(.1)
-        				colsol = self.ikmodel.manip.FindIKSolution(rotatedtrans, IkFilterOptions.CheckEnvCollisions)
-        				if colsol is not None:
-        					sol11DOF = numpy.append(colsol,self.robot.GetActiveDOFValues()[7:11])				
-        					armPoses = numpy.vstack([armPoses, sol11DOF])
-        					self.robot.SetActiveDOFValues(sol11DOF)
-        					time.sleep(.1)
-        					print 'success'
-        					break
-
-       	#while True:
-        #    sol = self.ikmodel.manip.FindIKSolution(trans, IkFilterOptions.IgnoreEndEffectorCollisions)
-    	#    sol11DOF = numpy.append(sol,self.robot.GetActiveDOFValues()[7:11])
-        #    self.robot.SetActiveDOFValues(sol11DOF)
-        #    IPython.embed()
-        IPython.embed()
-        return armPoses
+    def GetPose(self, o, v, a, trans):
+		dofs = self.robot.GetActiveDOFValues()
+		dofs[7] = a;
+		dofs[8] = a;
+		dofs[9] = a;
+		self.robot.SetActiveDOFValues(dofs)
+		rotatedtrans = trans.copy()
+		rotatedtrans[0:3,0:3] = numpy.dot(matrixFromAxisAngle([0,0,v])[0:3,0:3], rotatedtrans[0:3,0:3])
+		rotatedtrans[1][3] = rotatedtrans[1][3] + math.sin(v)*o        			
+		rotatedtrans[0][3] = rotatedtrans[0][3] + math.cos(v)*o        			
+		
+		sol = self.ikmodel.manip.FindIKSolution(rotatedtrans, IkFilterOptions.IgnoreEndEffectorCollisions)
+		if sol is None:
+			print 'fail'
+			return None
+		#IPython.embed()
+		armPoses = numpy.empty([0,11])
+		while True:
+			rotatedtrans[1][3] = rotatedtrans[1][3] + math.cos(v)*backwardincrement      			
+			rotatedtrans[0][3] = rotatedtrans[0][3] - math.sin(v)*backwardincrement        			
+			#IPython.embed()
+			anysol = self.ikmodel.manip.FindIKSolution(rotatedtrans, IkFilterOptions.IgnoreEndEffectorCollisions)
+			if anysol is None:
+				print 'fail'
+				return None
+			if anysol is not None:
+				sol11DOF = numpy.append(anysol,self.robot.GetActiveDOFValues()[7:11])				
+				self.robot.SetActiveDOFValues(sol11DOF)
+				#time.sleep(.1)
+			colsol = self.ikmodel.manip.FindIKSolution(rotatedtrans, IkFilterOptions.CheckEnvCollisions)
+			if colsol is not None:
+				sol11DOF = numpy.append(colsol,self.robot.GetActiveDOFValues()[7:11])				
+				armPose = sol11DOF
+				self.robot.SetActiveDOFValues(sol11DOF)
+				#time.sleep(.1)
+				print 'success'
+				break
+		return armPose
 
     def sampleTransformXY(self, transform, sigma = .01):
     	trans = transform.copy()
@@ -116,10 +94,13 @@ if __name__ == "__main__":
 	env.Load('env.xml')
 	env.SetViewer('qtcoin')
 	PSM = PushStateMachine(env)
-
-	bodySampleSize = 100
+	goalRadius = .05;
 	sigma = .015
+	CR = CaptureRegion(goalRadius+2*sigma)
+	#More Initialization							+
+	bodySampleSize = 20
 
+    #sample obstacles								+
 	body = []
 	with env:
 		boxtrans = numpy.array([[1,0,0,-.6785],[0,0,-1,-.6],[0,1,.0,1.112], [0,0,0,1]])
@@ -150,13 +131,14 @@ if __name__ == "__main__":
 			body2.append(tempbody)
 			env.AddKinBody(body2[i])
 
+    #sample goal object 							+
 	goal = []
 	with env:
 		goaltrans = numpy.array([[1,0,0,-.700],[0,0,-.9,-.37],[0,1,.0,1.112], [0,0,0,1]])
 		for i in range(bodySampleSize):
 			tempbody = RaveCreateKinBody(env,'')
 			tempbody.SetName(("Goal" + str(i)))
-			tempbody.InitFromSpheres(numpy.array([[0,0,0,.05]]), True)
+			tempbody.InitFromSpheres(numpy.array([[0,0,0,goalRadius]]), True)
 			trans = PSM.sampleTransformXY(goaltrans, sigma)
 			if(i != 0):
 				tempbody.SetTransform(trans)
@@ -168,22 +150,48 @@ if __name__ == "__main__":
 	viewer = env.GetViewer()
 	viewer.SetBkgndColor([.8, .85, .9])  # RGB tuple
 	robot = env.GetRobots()[0]
-	dofs = [2.0,-1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0]
+	dofs = [2.0,-1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,0.0]
 	robot.SetActiveDOFValues(dofs)
 
-#More Initialization							-
 
-    #sample goal object 							+
+	#Setup parameters for offsets to loop through
+	minAperture = CR.minAperture/180.0*3.14159
+	vStepCount=4; oStepCount=1; aStepCount = 4; backwardincrement = .03
 
-    #sample obstacles								
+	trans = goal[0].GetTransform()
+	sol = numpy.array([0,0,0,0,0,0,0])#7Dof
+	oSteps = numpy.linspace(-(CR.angleToFullHandWidth(0)-CR.angleToFullHandWidth(minAperture)),
+		(CR.angleToFullHandWidth(0)-CR.angleToFullHandWidth(minAperture)), num=oStepCount*2+1)
+	vSteps = numpy.linspace(0,2*math.pi, num = vStepCount, endpoint = False)
+	aSteps = numpy.linspace(0,minAperture,num = aStepCount)
+	CR.initializeCaptureRegions(aSteps)
+	#Loop through offset parameters a,v,o 			-
+	import IPython			
+	for o in oSteps:
+		for v in vSteps:
+			for a in aSteps:
+				pose = PSM.GetPose(o,v,a,goaltrans) 
+				if(pose is None):
+					continue
 
-    #Loop through offset parameters a,v,o 			-
-    #	GetPose 									+
-    #	Check Capture Region  						-
-    #		Check Push distance 					
+				print pose
+				print 'o: %f v: %f a: %f' % (o,v,a)
+				robot.SetActiveDOFValues(pose)
+				robottrans = robot.GetTransform()
+				p = (robottrans[0][3], robottrans[1][3], v)
+				for goalSample in goal:
+					IPython.embed()
+					goalSampleTrans = goalSample.GetTransform()
+					gSamples = (goalSampleTrans[0][3], goalSampleTrans[1][3], 1)
+					print CR.isInCaptureRegion(p, a, gSamples)
+
+
+	IPython.embed() 
+
+
+	#	GetPose 									+
+	#	Check Capture Region  						+
+	#		Check Push distance 					
 
 	#	Find plan 									-
 
-
-	import IPython
-	IPython.embed()
