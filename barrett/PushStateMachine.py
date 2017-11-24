@@ -90,10 +90,10 @@ class PushStateMachine:
         IPython.embed()
         return armPoses
 
-    def sampleObjectXY(self, object):
-    	trans = object.GetTransform()
-    	trans[1][3] = numpy.random.normal(trans[1][3], .03, 1)
-    	trans[0][3] = numpy.random.normal(trans[0][3], .03, 1)
+    def sampleTransformXY(self, transform, sigma = .02):
+    	trans = transform.copy()
+    	trans[1][3] = numpy.random.normal(trans[1][3], sigma, 1)
+    	trans[0][3] = numpy.random.normal(trans[0][3], sigma, 1)
     	return trans
 
 
@@ -104,14 +104,61 @@ class PushStateMachine:
 
     def MoveGripper(self, transform):
     	try:
-    		print 'attempting to move hand'#success = basemanip.MoveToHandPosition(translation=None,rotation=None,,execute=True,outputtraj=True,minimumgoalpaths=1):
+    		print 'attempting to move hand'
+    		#success = self.basemanip.MoveToHandPosition(translation=None,rotation=None,execute=True,outputtraj=True,minimumgoalpaths=1):
         except planning_error,e:
             return None
 
 
 
 if __name__ == "__main__":
-    env = openravepy.Environment()
-    env.Load('env.xml')
-    env.SetViewer('qtcoin')
-    PSM = PushStateMachine(env)
+	env = openravepy.Environment()
+	env.Load('env.xml')
+	env.SetViewer('qtcoin')
+	PSM = PushStateMachine(env)
+
+	body = []
+	with env:
+		boxtrans = numpy.array([[1,0,0,-.6785],[0,0,-1,-.6],[0,1,.0,1.112], [0,0,0,1]])
+		for i in range(10):
+			tempbody = RaveCreateKinBody(env,'')
+			tempbody.SetName(("Box" + str(i)))
+			tempbody.InitFromBoxes(numpy.array([[0,0,0,.1,0.05,0.075]]), True)
+			trans = PSM.sampleTransformXY(boxtrans)
+			tempbody.SetTransform(trans)
+			body.append(tempbody)
+			env.AddKinBody(body[i])
+
+
+	with env:
+		body = RaveCreateKinBody(env,'')
+		body.SetName("box");
+		body.InitFromBoxes(numpy.array([[0,0,0,.1,0.05,0.075]]), True)
+		#body.SetTransform(numpy.array([[1,0,0,-.75],[0,1,0,1.0],[0,0,1,1.2], [0,0,0,1]]))
+		#body.SetTransform(numpy.array([[.9846,.1600,.0706,-.6785],[.0581,.0823,-.9950,-.6],
+		#    [-.1649,.9838,.0707,1.112], [0,0,0,1]]))
+		body.SetTransform(numpy.array([[1,0,0,-.6785],[0,0,-1,-.3],[0,1,.0,1.112], [0,0,0,1]]))
+		env.AddKinBody(body)
+
+	viewer = env.GetViewer()
+	viewer.SetBkgndColor([.8, .85, .9])  # RGB tuple
+	robot = env.GetRobots()[0]
+	dofs = [2.0,-1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0]
+	robot.SetActiveDOFValues(dofs)
+
+#More Initialization							-
+
+    #sample goal object 							+
+
+    #sample obstacles								
+
+    #Loop through offset parameters a,v,o 			-
+    #	GetPose 									+
+    #	Check Capture Region  						-
+    #		Check Push distance 					
+
+	#	Find plan 									-
+
+
+	import IPython
+	IPython.embed()
