@@ -30,7 +30,7 @@ if __name__ == "__main__":
     lex.movehandstraight(env, direction, Tee)
 
     PSM = PushStateMachine(env)
-    PSM.GetPoses(env.GetKinBody('box'),1)
+    #PSM.GetPoses(env.GetKinBody('box'),1)
     import IPython
     IPython.embed()
 

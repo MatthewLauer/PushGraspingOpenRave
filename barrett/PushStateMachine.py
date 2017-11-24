@@ -28,7 +28,7 @@ class PushStateMachine:
     #Takes an object in the scene and returns an array of tuples 
     # with suggested hand pose (x, y, theta)
     # kinboayd is the object you want 
-    def GetPoses(self, kinbody, minAperture, vStepCount=12,  oStepCount=1, backwardincrement = .01):
+    def GetPoses(self, kinbody, minAperture, vStepCount=20,  oStepCount=1, backwardincrement = .01):
         print 'getting params'#does nothign
         trans = kinbody.GetTransform()
         sol = numpy.array([0,0,0,0,0,0,0])#7Dof
@@ -89,6 +89,13 @@ class PushStateMachine:
         #    IPython.embed()
         IPython.embed()
         return armPoses
+
+    def sampleObjectXY(self, object):
+    	trans = object.GetTransform()
+    	trans[1][3] = numpy.random.normal(trans[1][3], .03, 1)
+    	trans[0][3] = numpy.random.normal(trans[0][3], .03, 1)
+    	return trans
+
 
     #Terrible approxiamation that is sufficient for now
     def _ApetureAngleToDistance(self,angle):
