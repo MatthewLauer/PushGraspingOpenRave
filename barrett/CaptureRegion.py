@@ -128,8 +128,9 @@ class CaptureRegion:
 		point_z = abs(roundedTransformedPoint[0])
 		point_x = abs(roundedTransformedPoint[1])
 
-		if(a in self.apertureAngles):
-			index = self.apertureAngles.index(a)
+		indexArray = np.where(self.apertureAngles == a)[0]
+		if(indexArray.size > 0):	
+			index = indexArray[0]
 			(x_max, z_max, captureRegion) = self.captureRegions[index]
 			
 			if(point_x > x_max or point_z > z_max):
@@ -149,7 +150,7 @@ if __name__ == "__main__":
 
 	#cr = CaptureRegion(0.1) 
 	#print cr.minAperture
-	#cr.initializeCaptureRegions([0, 5, 10, 15, 20, 25, 30])
+	#cr.initializeCaptureRegions(np.array([0, 5, 10, 15, 20, 25, 30]))
 	#print cr.isInCaptureRegion([1,1,math.pi/4], 5, np.transpose(np.array([1.5,1.5,1])))
 	#print cr.captureRegions
 
