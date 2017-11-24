@@ -25,7 +25,7 @@ class CaptureRegion:
 			    self.lengthBaseFinger * math.cos(handRadian) - 
 			    self.fingerBaseTipOffset * math.sin(handRadian) + 
 			    self.lengthFingerEnd * math.cos(fingerRadian)) < self.objectRadius):
-				return handDegree - 1
+				return math.radians(handDegree - 1)
 
 	def initializeCaptureRegions(self, apertureAngles):
 		self.apertureAngles = apertureAngles
@@ -35,25 +35,25 @@ class CaptureRegion:
 			self.captureRegions.append(self.captureRegion(apertureAngle))
 
 
-	def angleToFullHandWidth(self, handDegree):
+	def angleToFullHandWidth(self, handRadian):
 
+		handDegree = math.degrees(handRadian)
 		fingerDegree = handDegree + handDegree*45/140 + 40	# maybe 48/140 + 52
-		handRadian = math.radians(handDegree)
 		fingerRadian = math.radians(fingerDegree)
 		return 2*(self.lengthHandCenter + 
 				  self.lengthBaseFinger * math.cos(handRadian) - 
 				  self.fingerBaseTipOffset * math.sin(handRadian) + 
 				  self.lengthFingerEnd * math.cos(fingerRadian))
 
-	def captureRegion(self, handDegree):
+	def captureRegion(self, handRadian):
 		# handDegree is within 0 and 140 degrees
 		# 0 degrees means the hand is fully open and 140 degrees means the hand is fully closed
 		# The end finger degree can only go between 0 and 48 degrees and starts at an angle of 52 degrees to the finger base.
 		# http://support.barrett.com/wiki/Hand/280/KinematicsJointRangesConversionFactors
 		# http://www.barrett.com/images/HandDime4.gif
 
+		handDegree = math.degrees(handRadian)
 		fingerDegree = handDegree + handDegree*45/140 + 40	# maybe 48/140 + 52
-		handRadian = math.radians(handDegree)
 		fingerRadian = math.radians(fingerDegree)
 
 		rightBaseFingerStartX = self.lengthHandCenter;
@@ -138,7 +138,8 @@ class CaptureRegion:
 
 			z_index = int(point_z * 1000)
 			x_index = int(point_x * 1000)
-
+			print (z_index, x_index)
+			np.savetxt("test.txt", captureRegion, fmt='%d')
 			return (captureRegion[z_index, x_index] == 1, max(0, 1 - (z_max - point_z)))
 
 		else:
@@ -147,7 +148,11 @@ class CaptureRegion:
 
 if __name__ == "__main__":
 	# Test cases
-	#cr = CaptureRegion(0.1) 
+	cr = CaptureRegion(0.05)
+	#print cr.minAperture
+	#cr.initializeCaptureRegions(np.array([0, math.radians(5), math.radians(10), math.radians(15), math.radians(20), math.radians(25), math.radians(30)]))
+	#print cr.isInCaptureRegion((-0.37156, -0.76, math.pi/2),0,(-0.37, -0.7, 1)) 
+	# print cr.transformPoint((-0.37156, -0.73, math.pi/2),(-0.37, -0.7, 1)) 
 	#print cr.minAperture
 	#cr.initializeCaptureRegions(np.array([0, 5, 10, 15, 20, 25, 30]))
 	#print cr.isInCaptureRegion([1,1,math.pi/4], 5, np.transpose(np.array([1.5,1.5,1])))
