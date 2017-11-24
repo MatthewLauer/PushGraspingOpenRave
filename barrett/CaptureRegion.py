@@ -125,7 +125,7 @@ class CaptureRegion:
 		#Use the capture region and check to see if the point is within the polygon of the capture region
 		transformedPoint = self.transformPoint(p, gSamples_i)
 		roundedTransformedPoint = np.around(transformedPoint, decimals=3)
-		point_z = abs(roundedTransformedPoint[0])
+		point_z = (roundedTransformedPoint[0])
 		point_x = abs(roundedTransformedPoint[1])
 
 		indexArray = np.where(self.apertureAngles == a)[0]
@@ -133,13 +133,16 @@ class CaptureRegion:
 			index = indexArray[0]
 			(x_max, z_max, captureRegion) = self.captureRegions[index]
 			
-			if(point_x > x_max or point_z > z_max):
+			if(point_x >= x_max or point_z >= z_max):
 				return (False, -1)
 
 			z_index = int(point_z * 1000)
 			x_index = int(point_x * 1000)
 			print (z_index, x_index)
-			np.savetxt("test.txt", captureRegion, fmt='%d')
+			if(z_index < 0):
+				return (False, -1)
+			#import IPython
+			#IPython.embed()
 			return (captureRegion[z_index, x_index] == 1, max(0, 1 - (z_max - point_z)))
 
 		else:

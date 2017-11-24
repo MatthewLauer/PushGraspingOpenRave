@@ -96,9 +96,9 @@ if __name__ == "__main__":
 	PSM = PushStateMachine(env)
 	goalRadius = .05;
 	sigma = .015
-	CR = CaptureRegion(goalRadius+2*sigma)
+	CR = CaptureRegion(goalRadius/2)
 	#More Initialization							+
-	bodySampleSize = 3
+	bodySampleSize = 1
 
     #sample obstacles								+
 	body = []
@@ -155,18 +155,19 @@ if __name__ == "__main__":
 
 
 	#Setup parameters for offsets to loop through
-	minAperture = CR.minAperture/180.0*3.14159
+	minAperture = CR.minAperture
 	vStepCount=4; oStepCount=1; aStepCount = 4; backwardincrement = .03
 
 	trans = goal[0].GetTransform()
-	sol = numpy.array([0,0,0,0,0,0,0])#7Dof
-	oSteps = numpy.linspace(-(CR.angleToFullHandWidth(0)-CR.angleToFullHandWidth(minAperture)),
-		(CR.angleToFullHandWidth(0)-CR.angleToFullHandWidth(minAperture)), num=oStepCount*2+1)
+	sol = numpy.array([0,0,0,0,0,0,0])#7Dof #-(CR.angleToFullHandWidth(0)-CR.angleToFullHandWidth(minAperture))/2
+	oSteps = numpy.linspace(0,
+		(CR.angleToFullHandWidth(0)-CR.angleToFullHandWidth(minAperture))/2, num=oStepCount*2+1)
 	vSteps = numpy.linspace(0,2*math.pi, num = vStepCount, endpoint = False)
 	aSteps = numpy.linspace(0,minAperture,num = aStepCount)
 
 	CR.initializeCaptureRegions(aSteps)
-	#Loop through offset parameters a,v,o 			-
+	#Loop through offset parameters a,v,o 	
+	#time.sleep(5)		
 	import IPython			
 	for o in oSteps:
 		for v in vSteps:
@@ -179,17 +180,18 @@ if __name__ == "__main__":
 				#print 'o: %f v: %f a: %f' % (o,v,a)
 				robot.SetActiveDOFValues(pose)
 				robottrans = robot.GetManipulator("arm").GetTransform()
-				p = (robottrans[0][3], robottrans[1][3], v)
-				print "Hand Pose:"
-				print p
-				print "Goals Samples:"
+				p = (robottrans[1][3], robottrans[0][3], v)
+				#print "Hand Pose:"
+				#print p
+				#print "Goals Samples:"
 				for goalSample in goal:
 					goalSampleTrans = goalSample.GetTransform()
-					gSamples = (goalSampleTrans[0][3], goalSampleTrans[1][3], 1)
-					print gSamples
+					gSamples = (goalSampleTrans[1][3], goalSampleTrans[0][3], 1)
+					#print gSamples
 					print CR.isInCaptureRegion(p, a, gSamples)
+					#time.sleep(1)
 
-				IPython.embed()
+				#IPython.embed()
 
 
 	IPython.embed() 
