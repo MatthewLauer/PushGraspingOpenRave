@@ -114,10 +114,9 @@ class CaptureRegion:
 
 	def transformPoint(self, p, gSamples_i):
 		transformationMatrix = np.zeros((3, 3))
-		degreeInRad = math.radians(p[2])
-		transformationMatrix[0,0] = math.cos(-degreeInRad)
+		transformationMatrix[0,0] = math.cos(-p[2])
 		transformationMatrix[1,1] = transformationMatrix[0,0]
-		transformationMatrix[1,0] = math.sin(-degreeInRad)
+		transformationMatrix[1,0] = math.sin(-p[2])
 		transformationMatrix[0,1] = -transformationMatrix[1,0]
 		transformationMatrix[0,2] = -(p[0] * transformationMatrix[0,0] + p[1] * transformationMatrix[0,1])
 		transformationMatrix[1,2] = -(p[0] * transformationMatrix[1,0] + p[1] * transformationMatrix[1,1])
@@ -149,10 +148,10 @@ class CaptureRegion:
 
 
 if __name__ == "__main__":
-	cr = CaptureRegion(0.1) 
+	#cr = CaptureRegion(0.1) 
 	#print cr.minAperture
-	cr.initializeCaptureRegions([0, 5, 10, 15, 20, 25, 30])
-	print cr.isInCaptureRegion([1,1,45], 5, np.transpose(np.array([1.5,1.5,1])))
+	#cr.initializeCaptureRegions([0, 5, 10, 15, 20, 25, 30])
+	#print cr.isInCaptureRegion([1,1,45], 5, np.transpose(np.array([1.5,1.5,1])))
 
 	#print cr.captureRegions
 	#transform = IsInCaptureRegion([1,1,45], 5, np.transpose(np.array([1.5,1.5,1])), 0)
