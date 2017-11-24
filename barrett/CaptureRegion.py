@@ -7,13 +7,13 @@ class CaptureRegion:
 
 	def __init__(self, objectRadius):
 		self.objectRadius = objectRadius
+		self.lengthHandCenter = 0.05 # 50 mm
+		self.lengthBaseFinger = 0.07 # 70 mm
+		self.lengthFingerEnd = 0.058 # 58 mm
+		self.fingerBaseTipOffset = 0.003 # 3 mm
 		self.minAperture = self.minAperture()
 
 	def minAperture(self):
-		lengthHandCenter = 0.05 # 50 mm
-		lengthBaseFinger = 0.07 # 70 mm
-		lengthFingerEnd = 0.058 # 58 mm
-		fingerBaseTipOffset = 0.003 # 3 mm
 
 		# max object radius is 0.1557m
 		# 87 degrees is the max handDegree when objectRadius = 0
@@ -21,7 +21,10 @@ class CaptureRegion:
 			fingerDegree = handDegree + handDegree*45/140 + 40	# maybe 48/140 + 52
 			handRadian = math.radians(handDegree)
 			fingerRadian = math.radians(fingerDegree)
-			if(lengthHandCenter + lengthBaseFinger * math.cos(handRadian) - fingerBaseTipOffset * math.sin(handRadian) + lengthFingerEnd * math.cos(fingerRadian) < self.objectRadius):
+			if((self.lengthHandCenter + 
+			    self.lengthBaseFinger * math.cos(handRadian) - 
+			    self.fingerBaseTipOffset * math.sin(handRadian) + 
+			    self.lengthFingerEnd * math.cos(fingerRadian)) < self.objectRadius):
 				return handDegree - 1
 
 	def initializeCaptureRegions(self, apertureAngles):
@@ -33,15 +36,14 @@ class CaptureRegion:
 
 
 	def angleToFullHandWidth(self, handDegree):
-		lengthHandCenter = 0.05 # 50 mm
-		lengthBaseFinger = 0.07 # 70 mm
-		lengthFingerEnd = 0.058 # 58 mm
-		fingerBaseTipOffset = 0.003 # 3 mm
 
 		fingerDegree = handDegree + handDegree*45/140 + 40	# maybe 48/140 + 52
 		handRadian = math.radians(handDegree)
 		fingerRadian = math.radians(fingerDegree)
-		return 2*(lengthHandCenter + lengthBaseFinger * math.cos(handRadian) - fingerBaseTipOffset * math.sin(handRadian) + lengthFingerEnd * math.cos(fingerRadian))
+		return 2*(self.lengthHandCenter + 
+				  self.lengthBaseFinger * math.cos(handRadian) - 
+				  self.fingerBaseTipOffset * math.sin(handRadian) + 
+				  self.lengthFingerEnd * math.cos(fingerRadian))
 
 	def captureRegion(self, handDegree):
 		# handDegree is within 0 and 140 degrees
@@ -54,32 +56,27 @@ class CaptureRegion:
 		handRadian = math.radians(handDegree)
 		fingerRadian = math.radians(fingerDegree)
 
-		lengthHandCenter = 0.05 # 50 mm
-		lengthBaseFinger = 0.07 # 70 mm
-		lengthFingerEnd = 0.058 # 58 mm
-		fingerBaseTipOffset = 0.003 # 3 mm
-
-		rightBaseFingerStartX = lengthHandCenter;
+		rightBaseFingerStartX = self.lengthHandCenter;
 		rightBaseFingerStartZ = 0;
 
-		rightBaseFingerXDif = lengthBaseFinger * math.cos(handRadian)
-		rightBaseFingerZDif = lengthBaseFinger * math.sin(handRadian)
+		rightBaseFingerXDif = self.lengthBaseFinger * math.cos(handRadian)
+		rightBaseFingerZDif = self.lengthBaseFinger * math.sin(handRadian)
 
 		rightBaseFingerEndX = rightBaseFingerStartX + rightBaseFingerXDif
 		rightBaseFingerEndZ  = rightBaseFingerStartZ + rightBaseFingerZDif
 
-		rightFingerTipStartX = rightBaseFingerEndX - fingerBaseTipOffset * math.sin(handRadian)
-		rightFingerTipStartZ = rightBaseFingerEndZ + fingerBaseTipOffset * math.cos(handRadian)
+		rightFingerTipStartX = rightBaseFingerEndX - self.fingerBaseTipOffset * math.sin(handRadian)
+		rightFingerTipStartZ = rightBaseFingerEndZ + self.fingerBaseTipOffset * math.cos(handRadian)
 
-		rightFingerTipXDif = lengthFingerEnd * math.cos(fingerRadian)
-		rightFingerTipZDif = lengthFingerEnd * math.sin(fingerRadian)
+		rightFingerTipXDif = self.lengthFingerEnd * math.cos(fingerRadian)
+		rightFingerTipZDif = self.lengthFingerEnd * math.sin(fingerRadian)
 
 		rightFingerTipEndX = rightFingerTipStartX + rightFingerTipXDif
 		rightFingerTipEndZ = rightFingerTipStartZ + rightFingerTipZDif
 
 		# Using the distance of a point from a line formula here: https://en.wikipedia.org/wiki/Distance_from_a_point_to_a_line
-		rightBaseFingerDesiredDist = -self.objectRadius * lengthBaseFinger
-		rightFingerEndDesiredDist = -self.objectRadius * lengthFingerEnd
+		rightBaseFingerDesiredDist = -self.objectRadius * self.lengthBaseFinger
+		rightFingerEndDesiredDist = -self.objectRadius * self.lengthFingerEnd
 
 		rightBaseFingerCrossProd = rightBaseFingerEndX * rightBaseFingerStartZ - rightBaseFingerEndZ * rightBaseFingerStartX
 		rightFingerEndCrossProd =  rightFingerTipEndX * rightFingerTipStartZ - rightFingerTipEndZ * rightFingerTipStartX
@@ -148,15 +145,17 @@ class CaptureRegion:
 
 
 if __name__ == "__main__":
+	# Test cases
+
 	#cr = CaptureRegion(0.1) 
 	#print cr.minAperture
 	#cr.initializeCaptureRegions([0, 5, 10, 15, 20, 25, 30])
-	#print cr.isInCaptureRegion([1,1,45], 5, np.transpose(np.array([1.5,1.5,1])))
-
+	#print cr.isInCaptureRegion([1,1,math.pi/4], 5, np.transpose(np.array([1.5,1.5,1])))
 	#print cr.captureRegions
-	#transform = IsInCaptureRegion([1,1,45], 5, np.transpose(np.array([1.5,1.5,1])), 0)
+
+	#transform = isInCaptureRegion([1,1,45], 5, np.transpose(np.array([1.5,1.5,1])), 0)
 	#print transform
-	# Test cases
+	
 	#maxDegree = minAperture(0.1)
 	#print maxDegree
 	#width = angleToFullHandWidth(0)
