@@ -114,10 +114,10 @@ if __name__ == "__main__":
 	env.SetViewer('qtcoin')
 	PSM = PushStateMachine(env)
 	goalRadius = .05;
-	sigma = .015
+	sigma = .02
 	CR = CaptureRegion(goalRadius/2)
 	#More Initialization							+
-	bodySampleSize = 10
+	bodySampleSize = 20
 
     #sample obstacles								+
 	body = []
@@ -133,7 +133,7 @@ if __name__ == "__main__":
 			else:
 				tempbody.SetTransform(boxtrans)
 			body.append(tempbody)
-			env.AddKinBody(body[i])
+			#env.AddKinBody(body[i])
 
 	body2 = []
 	with env:
@@ -148,7 +148,7 @@ if __name__ == "__main__":
 			else:
 				tempbody.SetTransform(boxtrans)
 			body2.append(tempbody)
-			env.AddKinBody(body2[i])
+			#env.AddKinBody(body2[i])
 
     #sample goal object 							+
 	goal = []
@@ -175,7 +175,7 @@ if __name__ == "__main__":
 
 	#Setup parameters for offsets to loop through
 	minAperture = CR.minAperture
-	vStepCount=4; oStepCount=1; aStepCount = 4; backwardincrement = .03
+	vStepCount=15; oStepCount=1; aStepCount = 4; backwardincrement = .03
 
 	trans = goal[0].GetTransform()
 	sol = numpy.array([0,0,0,0,0,0,0])#7Dof #-(CR.angleToFullHandWidth(0)-CR.angleToFullHandWidth(minAperture))/2
@@ -191,6 +191,7 @@ if __name__ == "__main__":
 	data_file.write("\nSamples: %f Sigma: %f Obstacles: %f" %(bodySampleSize, sigma, 2))
 
 	import IPython
+	push = None
 	start = time.time()
 	for o in oSteps:
 		for v in vSteps:
@@ -229,11 +230,14 @@ if __name__ == "__main__":
 					print "Push Grasp Found"
 					data_file.write("\n%f" %(time.time()-start))
 					start = time.time()
+					break
 					#time.sleep(1)
-
-
+			if push is not None:
+				break
+		if push is not None:
+			break
 	data_file.close()
-	IPython.embed() 
+	#IPython.embed() 
 
 
 	#	GetPose 									+
