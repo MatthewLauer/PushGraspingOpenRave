@@ -85,7 +85,7 @@ class PushStateMachine:
 			#rotation = pose[0:4]
 			#success = self.basemanip.MoveToHandPosition(translation = translation, rotation = rotation, execute=True,outputtraj=True,minimumgoalpaths=1)
 			success = self.basemanip.MoveToHandPosition(matrices=[trans], seedik=10)
-			#robot.WaitForController(0)
+			robot.WaitForController(0)
 			return success
 		except planning_error,e:
 		    return None
@@ -100,7 +100,7 @@ class PushStateMachine:
 			direction = [math.sin(dirAngle),-math.cos(dirAngle), 0]
 			#IPython.embed()
 			success = self.basemanip.MoveHandStraight(direction=direction,starteematrix=Tee,stepsize=stepsize,minsteps=steps-1,maxsteps=steps,outputtraj = True)
-			#robot.WaitForController(0)
+			robot.WaitForController(0)
 
 			return success
 		except Exception as e:
@@ -114,10 +114,10 @@ if __name__ == "__main__":
 	env.SetViewer('qtcoin')
 	PSM = PushStateMachine(env)
 	goalRadius = .05;
-	sigma = .02
+	sigma = .005
 	CR = CaptureRegion(goalRadius/2)
 	#More Initialization							+
-	bodySampleSize = 20
+	bodySampleSize = 30
 
     #sample obstacles								+
 	body = []
@@ -133,7 +133,7 @@ if __name__ == "__main__":
 			else:
 				tempbody.SetTransform(boxtrans)
 			body.append(tempbody)
-			#env.AddKinBody(body[i])
+			env.AddKinBody(body[i])
 
 	body2 = []
 	with env:
@@ -148,7 +148,7 @@ if __name__ == "__main__":
 			else:
 				tempbody.SetTransform(boxtrans)
 			body2.append(tempbody)
-			#env.AddKinBody(body2[i])
+			env.AddKinBody(body2[i])
 
     #sample goal object 							+
 	goal = []
@@ -192,6 +192,7 @@ if __name__ == "__main__":
 
 	import IPython
 	push = None
+	time.sleep(15)
 	start = time.time()
 	for o in oSteps:
 		for v in vSteps:
@@ -230,12 +231,12 @@ if __name__ == "__main__":
 					print "Push Grasp Found"
 					data_file.write("\n%f" %(time.time()-start))
 					start = time.time()
+					time.sleep(3)
 					break
-					#time.sleep(1)
 			if push is not None:
-				break
+				continue
 		if push is not None:
-			break
+			continue
 	data_file.close()
 	#IPython.embed() 
 
