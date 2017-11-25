@@ -15,15 +15,11 @@ class PushStateMachine:
         self.handMover = handMover();
         self.env = env;
         self.robot = env.GetRobots()[0]
+        self.robot.SetActiveManipulator('arm')
         self.ikmodel = databases.inversekinematics.InverseKinematicsModel(robot=self.robot,iktype=IkParameterization.Type.Transform6D)
         if not self.ikmodel.load():
             self.ikmodel.autogenerate()
-            self.basemanip = interfaces.BaseManipulation(self.robot)
-            self.robot.SetJointValues([0.0,0.0,0.0,0.0],self.ikmodel.manip.GetGripperIndices())
-            Tstart = array([[ -1,  0,  0,   2.00000000e-01], [  0,0,   1, 6.30000000e-01], [  0,   1  , 0,   5.50000000e-02], [  0,0,0,1]])
-            sol = self.ikmodel.manip.FindIKSolution(Tstart,IkFilterOptions.CheckEnvCollisions)
-            IPython.embed()
-            self.robot.SetDOFValues(sol,self.ikmodel.manip.GetArmIndices())
+        self.basemanip = interfaces.BaseManipulation(self.robot)
   
 
     #Takes an object in the scene and returns an array of tuples 
@@ -35,6 +31,7 @@ class PushStateMachine:
 		dofs[8] = a;
 		dofs[9] = a;
 		self.robot.SetActiveDOFValues(dofs)
+
 		rotatedtrans = trans.copy()
 		rotatedtrans[0:3,0:3] = numpy.dot(matrixFromAxisAngle([0,0,v])[0:3,0:3], rotatedtrans[0:3,0:3])
 		rotatedtrans[1][3] = rotatedtrans[1][3] + math.sin(v)*o        			
@@ -80,10 +77,16 @@ class PushStateMachine:
     	return 2*.075*math.cos(angle)
 
 
-    def MoveGripper(self, transform):
+    def MoveGripper(self, trans):
     	try:
     		print 'attempting to move hand'
-    		#success = self.basemanip.MoveToHandPosition(translation=None,rotation=None,execute=True,outputtraj=True,minimumgoalpaths=1):
+    		#IPython.embed()
+    		#translation = pose[4:7]
+    		#rotation = pose[0:4]
+    		#success = self.basemanip.MoveToHandPosition(translation = translation, rotation = rotation, execute=True,outputtraj=True,minimumgoalpaths=1)
+    		success = self.basemanip.MoveToHandPosition(matrices=[trans], seedik=10)
+    		robot.WaitForController(0)
+        	return success
         except planning_error,e:
             return None
 
