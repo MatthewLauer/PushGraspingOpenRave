@@ -115,7 +115,7 @@ if __name__ == "__main__":
 	sigma = .015
 	CR = CaptureRegion(goalRadius/2)
 	#More Initialization							+
-	bodySampleSize = 1
+	bodySampleSize = 20
 
     #sample obstacles								+
 	body = []
@@ -167,7 +167,7 @@ if __name__ == "__main__":
 	viewer = env.GetViewer()
 	viewer.SetBkgndColor([.8, .85, .9])  # RGB tuple
 	robot = env.GetRobots()[0]
-	dofs = [2.0,-1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,0.0]
+	dofs = [-2.0,1.0,2.0,-.5,-1.0,1.0,1.0,1.0,1.0,1.0,0.0]
 	robot.SetActiveDOFValues(dofs)
 
 
@@ -205,10 +205,19 @@ if __name__ == "__main__":
 					goalSampleTrans = goalSample.GetTransform()
 					gSamples = (goalSampleTrans[1][3], goalSampleTrans[0][3], 1)
 					#print gSamples
-					print CR.isInCaptureRegion(p, a, gSamples)
+					success =  CR.isInCaptureRegion(p, a, gSamples)
+					if success[0] == False:
+						break
+
+				if(success[0] == False):
+					continue
+				dofs[7:10] = [a,a,a]
+				robot.SetActiveDOFValues(dofs)
+				PSM.MoveGripper(robottrans)
+				PSM.MoveGripperStraight(distance= success[1], Tee = robottrans, dirAngle= v)
 					#time.sleep(1)
 
-				#IPython.embed()
+				IPython.embed()
 
 
 	IPython.embed() 
