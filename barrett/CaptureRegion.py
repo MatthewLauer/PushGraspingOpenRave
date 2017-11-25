@@ -138,7 +138,7 @@ class CaptureRegion:
 
 			z_index = int(point_z * 1000)
 			x_index = int(point_x * 1000)
-			print (z_index, x_index)
+			(z_index, x_index)
 			if(z_index < 0):
 				return (False, -1)
 			#import IPython

@@ -85,20 +85,22 @@ class PushStateMachine:
 			#rotation = pose[0:4]
 			#success = self.basemanip.MoveToHandPosition(translation = translation, rotation = rotation, execute=True,outputtraj=True,minimumgoalpaths=1)
 			success = self.basemanip.MoveToHandPosition(matrices=[trans], seedik=10)
-			robot.WaitForController(0)
+			#robot.WaitForController(0)
 			return success
 		except planning_error,e:
 		    return None
 
 	def MoveGripperStraight(self, distance, Tee, dirAngle):
 		try:
-			print 'attempting to move straight'
+			#print 'attempting to move straight'
+			if(distance ==  0):
+				return True
 			stepsize = .01
 			steps = distance /stepsize
 			direction = [math.sin(dirAngle),-math.cos(dirAngle), 0]
 			#IPython.embed()
 			success = self.basemanip.MoveHandStraight(direction=direction,starteematrix=Tee,stepsize=stepsize,minsteps=steps-1,maxsteps=steps,outputtraj = True)
-			robot.WaitForController(0)
+			#robot.WaitForController(0)
 
 			return success
 		except Exception as e:
@@ -115,7 +117,7 @@ if __name__ == "__main__":
 	sigma = .015
 	CR = CaptureRegion(goalRadius/2)
 	#More Initialization							+
-	bodySampleSize = 20
+	bodySampleSize = 10
 
     #sample obstacles								+
 	body = []
@@ -184,8 +186,12 @@ if __name__ == "__main__":
 
 	CR.initializeCaptureRegions(aSteps)
 	#Loop through offset parameters a,v,o 	
-	#time.sleep(5)		
-	import IPython			
+	#time.sleep(5)
+	data_file = open("Data.txt", "a")
+	data_file.write("\nSamples: %f Sigma: %f Obstacles: %f" %(bodySampleSize, sigma, 2))
+
+	import IPython
+	start = time.time()
 	for o in oSteps:
 		for v in vSteps:
 			for a in aSteps:
@@ -205,7 +211,7 @@ if __name__ == "__main__":
 					goalSampleTrans = goalSample.GetTransform()
 					gSamples = (goalSampleTrans[1][3], goalSampleTrans[0][3], 1)
 					#print gSamples
-					success =  CR.isInCaptureRegion(p, a, gSamples)
+					success = CR.isInCaptureRegion(p, a, gSamples)
 					if success[0] == False:
 						break
 
@@ -214,12 +220,19 @@ if __name__ == "__main__":
 				dofs[7:10] = [a,a,a]
 				robot.SetActiveDOFValues(dofs)
 				PSM.MoveGripper(robottrans)
-				PSM.MoveGripperStraight(distance= success[1], Tee = robottrans, dirAngle= v)
+				for goalSample in goal:
+					env.Remove(goalSample)
+				push = PSM.MoveGripperStraight(distance= success[1], Tee = robottrans, dirAngle= v)
+				for goalSample in goal:
+					env.AddKinBody(goalSample)
+				if push is not None:
+					print "Push Grasp Found"
+					data_file.write("\n%f" %(time.time()-start))
+					start = time.time()
 					#time.sleep(1)
 
-				IPython.embed()
 
-
+	data_file.close()
 	IPython.embed() 
 
 
