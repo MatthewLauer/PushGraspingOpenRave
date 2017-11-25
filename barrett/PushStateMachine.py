@@ -11,21 +11,21 @@ from CaptureRegion import CaptureRegion
 
 class PushStateMachine:
 
-    def __init__(self, env):
-        self.handMover = handMover();
-        self.env = env;
-        self.robot = env.GetRobots()[0]
-        self.robot.SetActiveManipulator('arm')
-        self.ikmodel = databases.inversekinematics.InverseKinematicsModel(robot=self.robot,iktype=IkParameterization.Type.Transform6D)
-        if not self.ikmodel.load():
-            self.ikmodel.autogenerate()
-        self.basemanip = interfaces.BaseManipulation(self.robot)
-  
+	def __init__(self, env):
+	    self.handMover = handMover();
+	    self.env = env;
+	    self.robot = env.GetRobots()[0]
+	    self.robot.SetActiveManipulator('arm')
+	    self.ikmodel = databases.inversekinematics.InverseKinematicsModel(robot=self.robot,iktype=IkParameterization.Type.Transform6D)
+	    if not self.ikmodel.load():
+	        self.ikmodel.autogenerate()
+	    self.basemanip = interfaces.BaseManipulation(self.robot)
 
-    #Takes an object in the scene and returns an array of tuples 
-    # with suggested hand pose (x, y, theta)
-    # kinboayd is the object you want 
-    def GetPose(self, o, v, a, trans):
+
+	#Takes an object in the scene and returns an array of tuples 
+	# with suggested hand pose (x, y, theta)
+	# kinboayd is the object you want 
+	def GetPose(self, o, v, a, trans):
 		dofs = self.robot.GetActiveDOFValues()
 		dofs[7] = a;
 		dofs[8] = a;
@@ -65,30 +65,44 @@ class PushStateMachine:
 				break
 		return armPose
 
-    def sampleTransformXY(self, transform, sigma = .01):
-    	trans = transform.copy()
-    	trans[1][3] = numpy.random.normal(trans[1][3], sigma, 1)
-    	trans[0][3] = numpy.random.normal(trans[0][3], sigma, 1)
-    	return trans
+	def sampleTransformXY(self, transform, sigma = .01):
+		trans = transform.copy()
+		trans[1][3] = numpy.random.normal(trans[1][3], sigma, 1)
+		trans[0][3] = numpy.random.normal(trans[0][3], sigma, 1)
+		return trans
 
 
-    #Terrible approxiamation that is sufficient for now
-    def _ApetureAngleToDistance(self,angle):
-    	return 2*.075*math.cos(angle)
+	#Terrible approxiamation that is sufficient for now
+	def _ApetureAngleToDistance(self,angle):
+		return 2*.075*math.cos(angle)
 
 
-    def MoveGripper(self, trans):
-    	try:
-    		print 'attempting to move hand'
-    		#IPython.embed()
-    		#translation = pose[4:7]
-    		#rotation = pose[0:4]
-    		#success = self.basemanip.MoveToHandPosition(translation = translation, rotation = rotation, execute=True,outputtraj=True,minimumgoalpaths=1)
-    		success = self.basemanip.MoveToHandPosition(matrices=[trans], seedik=10)
-    		robot.WaitForController(0)
-        	return success
-        except planning_error,e:
-            return None
+	def MoveGripper(self, trans):
+		try:
+			print 'attempting to move hand'
+			#IPython.embed()
+			#translation = pose[4:7]
+			#rotation = pose[0:4]
+			#success = self.basemanip.MoveToHandPosition(translation = translation, rotation = rotation, execute=True,outputtraj=True,minimumgoalpaths=1)
+			success = self.basemanip.MoveToHandPosition(matrices=[trans], seedik=10)
+			robot.WaitForController(0)
+			return success
+		except planning_error,e:
+		    return None
+
+	def MoveGripperStraight(self, distance, Tee, dirAngle):
+		try:
+			print 'attempting to move straight'
+			stepsize = .01
+			steps = distance /stepsize
+			direction = [math.sin(dirAngle),-math.cos(dirAngle), 0]
+			#IPython.embed()
+			success = self.basemanip.MoveHandStraight(direction=direction,starteematrix=Tee,stepsize=stepsize,minsteps=steps-1,maxsteps=steps,outputtraj = True)
+			robot.WaitForController(0)
+
+			return success
+		except Exception as e:
+			return None
 
 
 
