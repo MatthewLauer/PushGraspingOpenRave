@@ -107,6 +107,23 @@ class PushStateMachine:
         except Exception as e:
             return None
 
+    def standardGraspAttempt(self, goal):
+        try:
+            gmodel = openravepy.databases.grasping.GraspingModel(robot, goal)
+            if not gmodel.load():
+                gmodel.autogenerate()
+
+            validgrasps, validindices = gmodel.computeValidGrasps(returnnum=10)
+            if(len(validgrasps) == 0):
+                return False
+            validgrasp = validgrasps[0]
+            Tgrasp = gmodel.getGlobalGraspTransform(validgrasp, collisionfree=True)
+            self.basemanip.MoveToHandPosition(matrices=[Tgrasp])
+            #robot.WaitForController(0)
+            return True
+        except:
+            return False
+
 def loadObstaclesInEnvironment(PSM, env, sigma, robotPos, goalPos, goalRadius, maxDist, numObstacles, obstacleSizes, numObstacleSamples):
     #sample obstacles                               +
     obstacles = []
@@ -201,15 +218,28 @@ if __name__ == "__main__":
     robot_trans = robot.GetTransform()
     robotPos = (robot_trans[0,3]+0.23, robot_trans[1,3]+0.15, robot_trans[2,3])
 
+    # Initialize the standard grasp model
+    goalPos = (random.uniform(-0.8, 0.8), random.uniform(-0.8, 0.8), 0.33)
+    while(sqrt((robotPos[0] - goalPos[0])**2 + (robotPos[1] - goalPos[1])**2) < goalRadius * 8):
+        goalPos = (random.uniform(-0.8, 0.8), random.uniform(-0.8, 0.8), 0.33)
+
+    (goal, goaltrans) = loadGoalsInEnvironment(PSM, env, 0.0000000000000000001, goalPos, goalRadius, 1)
+
+    PSM.standardGraspAttempt(goal[0])
+
+    removeGoalFromEnvironment(env, goal)
+
     for sampleSize in sampleSizes:
         for sigma in sigmas:
             for maxDist in maxDists:
                 for numObstacles in xrange(numObstaclesPlus1):
                     data_file = open("Data.txt", "a")
+                    data_file2 = open("DataStandard.txt", "a")
                     data_file.write("\nSamples: %f Sigma: %f Max Dist: %f Num Obstacles: %f" %(sampleSize, sigma, maxDist, numObstacles))
+                    data_file2.write("\nSamples: %f Sigma: %f Max Dist: %f Num Obstacles: %f" %(sampleSize, sigma, maxDist, numObstacles))
 
                     for iteration in xrange(numIterations):
-    
+
                         #More Initialization                            +
                         numObstacleSamples = sampleSize
                         numGoalSamples = sampleSize
@@ -220,6 +250,12 @@ if __name__ == "__main__":
 
                         obstacles = loadObstaclesInEnvironment(PSM, env, sigma, robotPos, goalPos, goalRadius, maxDist, numObstacles, obstacleSizes, numObstacleSamples)
                         (goal, goaltrans) = loadGoalsInEnvironment(PSM, env, sigma, goalPos, goalRadius, numGoalSamples)
+
+                        start = time.time()
+                        if(PSM.standardGraspAttempt(goal[0])):
+                            data_file2.write("\n%f" %(time.time()-start))
+                        else:
+                            data_file2.write("\nFail")
 
                         #IPython.embed()
 
@@ -287,6 +323,7 @@ if __name__ == "__main__":
                         if push is None:
                             data_file.write("\nFail")
                     data_file.close()
+                    data_file2.close()
     #data_file.close()
     # IPython.embed() 
 
