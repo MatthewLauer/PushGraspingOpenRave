@@ -68,8 +68,8 @@ class PushStateMachine:
 
     def sampleTransformXY(self, transform, sigma = .01):
         trans = transform.copy()
-        trans[1][3] = numpy.random.normal(trans[1][3], sigma, 1)
         trans[0][3] = numpy.random.normal(trans[0][3], sigma, 1)
+        trans[1][3] = numpy.random.normal(trans[1][3], sigma, 1)
         return trans
 
 
@@ -117,7 +117,7 @@ def loadObstaclesInEnvironment(PSM, env, sigma, robotPos, goalPos, goalRadius, m
             random_y_perturb = maxDist * random.uniform(-1,1)
             x_pos = goalPos[0] + random_x_perturb + (goalRadius + obstacleSizes[obstacle][0]/2)*numpy.sign(random_x_perturb)
             y_pos = goalPos[1] + random_y_perturb + (goalRadius + obstacleSizes[obstacle][1]/2)*numpy.sign(random_y_perturb)
-            while(sqrt((robotPos[0] - x_pos)**2 + (robotPos[1] - y_pos)**2) < max(obstacleSizes[obstacle][0], obstacleSizes[obstacle][1]) * 3):
+            while(sqrt((robotPos[0] - x_pos)**2 + (robotPos[1] - y_pos)**2) < max(obstacleSizes[obstacle][0], obstacleSizes[obstacle][1]) * 5):
                 random_x_perturb = maxDist * random.uniform(-1,1)
                 random_y_perturb = maxDist * random.uniform(-1,1)
                 x_pos = goalPos[0] + random_x_perturb + (goalRadius + obstacleSizes[obstacle][0]/2)*numpy.sign(random_x_perturb)
@@ -174,9 +174,9 @@ if __name__ == "__main__":
     PSM = PushStateMachine(env)
     goalRadius = .05;
     CR = CaptureRegion(goalRadius/2)
-    sampleSizes = [1, 10, 30, 50]
-    sigmas = [0.005, 0.02, 0.06] #0.0000000000000000001, 0.005, 0.02, 0.06]
-    maxDists = [0.5] #0.25,0.5]
+    sampleSizes = [1, 10, 30, 50]       #1, 10, 30, 50]
+    sigmas = [0.0000000000000000001, 0.005, 0.02, 0.06] #0.0000000000000000001, 0.005, 0.02, 0.06]
+    maxDists = [0.25, 0.5]             #0.25,0.5]
     numObstaclesPlus1 = 4
     obstacleSizes = [(0.05, 0.1, 0.1),(0.1, 0.05, 0.1),(0.05, 0.1, 0.05)]
     numIterations = 10
@@ -214,9 +214,9 @@ if __name__ == "__main__":
                         numObstacleSamples = sampleSize
                         numGoalSamples = sampleSize
 
-                        goalPos = (random.uniform(-1,0), random.uniform(-0.5,0.5), random.uniform(0.8,1.2))
+                        goalPos = (random.uniform(-0.8, 0.8), random.uniform(-0.8, 0.8), 0.33)
                         while(sqrt((robotPos[0] - goalPos[0])**2 + (robotPos[1] - goalPos[1])**2) < goalRadius * 8):
-                            goalPos = (random.uniform(-1.5,0), random.uniform(-0.5,-0.25), random.uniform(0.8,1.2))
+                            goalPos = (random.uniform(-0.8, 0.8), random.uniform(-0.8, 0.8), 0.33)
 
                         obstacles = loadObstaclesInEnvironment(PSM, env, sigma, robotPos, goalPos, goalRadius, maxDist, numObstacles, obstacleSizes, numObstacleSamples)
                         (goal, goaltrans) = loadGoalsInEnvironment(PSM, env, sigma, goalPos, goalRadius, numGoalSamples)
@@ -239,19 +239,21 @@ if __name__ == "__main__":
                                     if(pose is None):
                                         continue
 
+                                    # IPython.embed()
                                     #print pose
                                     #print 'o: %f v: %f a: %f' % (o,v,a)
                                     robot.SetActiveDOFValues(pose)
                                     robottrans = robot.GetManipulator("arm").GetTransform()
-                                    p = (robottrans[1][3], robottrans[0][3], v)
+                                    p = (robottrans[0][3], robottrans[1][3], v-math.pi/2)
                                     #print "Hand Pose:"
                                     #print p
                                     #print "Goals Samples:"
                                     for goalSample in goal:
                                         goalSampleTrans = goalSample.GetTransform()
-                                        gSamples = (goalSampleTrans[1][3], goalSampleTrans[0][3], 1)
+                                        gSamples = (goalSampleTrans[0][3], goalSampleTrans[1][3], 1)
                                         #print gSamples
                                         success = CR.isInCaptureRegion(p, a, gSamples)
+                                        #IPython.embed()
                                         if success[0] == False:
                                             break
 
