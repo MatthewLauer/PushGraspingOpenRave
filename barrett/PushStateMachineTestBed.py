@@ -192,7 +192,7 @@ if __name__ == "__main__":
     goalRadius = .05;
     CR = CaptureRegion(goalRadius/2)
     sampleSizes = [1, 10, 30, 50]       #1, 10, 30, 50]
-    sigmas = [0.0000000000000000001, 0.005, 0.02, 0.06] #0.0000000000000000001, 0.005, 0.02, 0.06]
+    sigmas = [0.005, 0.02, 0.06] #0.0000000000000000001, 0.005, 0.02, 0.06]
     maxDists = [0.25, 0.5]             #0.25,0.5]
     numObstaclesPlus1 = 4
     obstacleSizes = [(0.05, 0.1, 0.1),(0.1, 0.05, 0.1),(0.05, 0.1, 0.05)]
@@ -284,23 +284,26 @@ if __name__ == "__main__":
                                     #print "Hand Pose:"
                                     #print p
                                     #print "Goals Samples:"
+                                    successes = []
+                                    i = 0
                                     for goalSample in goal:
                                         goalSampleTrans = goalSample.GetTransform()
                                         gSamples = (goalSampleTrans[0][3], goalSampleTrans[1][3], 1)
                                         #print gSamples
-                                        success = CR.isInCaptureRegion(p, a, gSamples)
+                                        successes.append(CR.isInCaptureRegion(p, a, gSamples))
                                         #IPython.embed()
-                                        if success[0] == False:
+                                        if (successes[i][0] == False):
                                             break
+                                        i = i + 1
 
-                                    if(success[0] == False):
+                                    if(i < numGoalSamples):
                                         continue
                                     dofs[7:10] = [a,a,a]
                                     robot.SetActiveDOFValues(dofs)
                                     PSM.MoveGripper(robottrans)
                                     for goalSample in goal:
                                         env.Remove(goalSample)
-                                    push = PSM.MoveGripperStraight(distance= success[1], Tee = robottrans, dirAngle= v)
+                                    push = PSM.MoveGripperStraight(distance=max(successes, key=lambda x: x[1])[1], Tee = robottrans, dirAngle= v)
                                     for goalSample in goal:
                                         env.AddKinBody(goalSample)
                                     if push is not None:
