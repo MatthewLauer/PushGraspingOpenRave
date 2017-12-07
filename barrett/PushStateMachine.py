@@ -107,6 +107,20 @@ class PushStateMachine:
         except Exception as e:
             return None
 
+    def standardGraspAttempt(self, goal):
+        gmodel = openravepy.databases.grasping.GraspingModel(robot, goal[0])
+        if not gmodel.load():
+            gmodel.autogenerate()
+
+        validgrasps, validindices = gmodel.computeValidGrasps(returnnum=10)
+        if(validgrasps is None):
+            return False
+        validgrasp = validgrasps[0]
+        Tgrasp = gmodel.getGlobalGraspTransform(validgrasp, collisionfree=True)
+        self.basemanip.MoveToHandPosition(matrices=[Tgrasp])
+        #robot.WaitForController(0)
+        return True
+
 def loadObstaclesInEnvironment(PSM, env, sigma, goalPos, goalRadius, maxDist, numObstacles, obstacleSizes, numObstacleSamples):
     #sample obstacles                               +
     obstacles = []
@@ -147,20 +161,6 @@ def loadGoalsInEnvironment(PSM, env, sigma, goalPos, goalRadius, numGoalSamples)
             goal.append(tempbody)
             env.AddKinBody(goal[i])
     return (goal, goaltrans)
-
-def standardGraspAttempt(self, goal):
-	gmodel = openravepy.databases.grasping.GraspingModel(robot, goal[0])
-	if not gmodel.load():
-		gmodel.autogenerate()
-
-	validgrasps, validindices = gmodel.computeValidGrasps(returnnum=10)
-	if(validgrasps is None):
-		return False
-	validgrasp = validgrasps[0]
-	Tgrasp = gmodel.getGlobalGraspTransform(validgrasp, collisionfree=True)
-	self.basemanip.MoveToHandPosition(matrices=[Tgrasp])
-	#robot.WaitForController(0)
-	return True
 
 
 if __name__ == "__main__":

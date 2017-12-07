@@ -191,9 +191,9 @@ if __name__ == "__main__":
     PSM = PushStateMachine(env)
     goalRadius = .05;
     CR = CaptureRegion(goalRadius/2)
-    sampleSizes = [1, 10, 30, 50]       #1, 10, 30, 50]
-    sigmas = [0.005, 0.02, 0.06] #0.0000000000000000001, 0.005, 0.02, 0.06]
-    maxDists = [0.25, 0.5]             #0.25,0.5]
+    sampleSizes = [1, 10, 30, 50]
+    sigmas = [0.0000000000000000001, 0.005, 0.02, 0.06]
+    maxDists = [0.25, 0.5]
     numObstaclesPlus1 = 4
     obstacleSizes = [(0.05, 0.1, 0.1),(0.1, 0.05, 0.1),(0.05, 0.1, 0.05)]
     numIterations = 10
@@ -218,28 +218,34 @@ if __name__ == "__main__":
     robot_trans = robot.GetTransform()
     robotPos = (robot_trans[0,3]+0.23, robot_trans[1,3]+0.15, robot_trans[2,3])
 
+    # Uncomment to compare with the built-in grasper
     # Initialize the standard grasp model
-    goalPos = (random.uniform(-0.8, 0.8), random.uniform(-0.8, 0.8), 0.33)
-    while(sqrt((robotPos[0] - goalPos[0])**2 + (robotPos[1] - goalPos[1])**2) < goalRadius * 8):
-        goalPos = (random.uniform(-0.8, 0.8), random.uniform(-0.8, 0.8), 0.33)
+    # goalPos = (random.uniform(-0.8, 0.8), random.uniform(-0.8, 0.8), 0.33)
+    # while(sqrt((robotPos[0] - goalPos[0])**2 + (robotPos[1] - goalPos[1])**2) < goalRadius * 8):
+    #     goalPos = (random.uniform(-0.8, 0.8), random.uniform(-0.8, 0.8), 0.33)
+    # (goal, goaltrans) = loadGoalsInEnvironment(PSM, env, 0.0000000000000000001, goalPos, goalRadius, 1)
+    # PSM.standardGraspAttempt(goal[0])
+    # removeGoalFromEnvironment(env, goal)
 
-    (goal, goaltrans) = loadGoalsInEnvironment(PSM, env, 0.0000000000000000001, goalPos, goalRadius, 1)
-
-    PSM.standardGraspAttempt(goal[0])
-
-    removeGoalFromEnvironment(env, goal)
+    # Uncomment to run only a specified experiment
+    # todo = [(50, 0.02, 0.25)]
+    # for (sampleSize, sigma, maxDist) in todo:
 
     for sampleSize in sampleSizes:
         for sigma in sigmas:
             for maxDist in maxDists:
                 for numObstacles in xrange(numObstaclesPlus1):
                     data_file = open("Data.txt", "a")
-                    data_file2 = open("DataStandard.txt", "a")
                     data_file.write("\nSamples: %f Sigma: %f Max Dist: %f Num Obstacles: %f" %(sampleSize, sigma, maxDist, numObstacles))
-                    data_file2.write("\nSamples: %f Sigma: %f Max Dist: %f Num Obstacles: %f" %(sampleSize, sigma, maxDist, numObstacles))
+                    data_file.close()
+                    # Uncomment to compare with the built-in grasper
+                    # data_file2 = open("DataStandard.txt", "a")
+                    # data_file2.write("\nSamples: %f Sigma: %f Max Dist: %f Num Obstacles: %f" %(sampleSize, sigma, maxDist, numObstacles))
+                    # data_file2.close()
 
                     for iteration in xrange(numIterations):
 
+                        data_file = open("Data.txt", "a")
                         #More Initialization                            +
                         numObstacleSamples = sampleSize
                         numGoalSamples = sampleSize
@@ -251,11 +257,14 @@ if __name__ == "__main__":
                         obstacles = loadObstaclesInEnvironment(PSM, env, sigma, robotPos, goalPos, goalRadius, maxDist, numObstacles, obstacleSizes, numObstacleSamples)
                         (goal, goaltrans) = loadGoalsInEnvironment(PSM, env, sigma, goalPos, goalRadius, numGoalSamples)
 
-                        start = time.time()
-                        if(PSM.standardGraspAttempt(goal[0])):
-                            data_file2.write("\n%f" %(time.time()-start))
-                        else:
-                            data_file2.write("\nFail")
+                        # Uncomment to compare with the built-in grasper
+                        # data_file2 = open("DataStandard.txt", "a")
+                        # start = time.time()
+                        # if(PSM.standardGraspAttempt(goal[0])):
+                        #     data_file2.write("\n%f" %(time.time()-start))
+                        # else:
+                        #     data_file2.write("\nFail")
+                        # data_file2.close()
 
                         #IPython.embed()
 
@@ -263,8 +272,6 @@ if __name__ == "__main__":
                         
                         #Loop through offset parameters a,v,o   
                         #time.sleep(5)
-                        
-                        #
 
                         push = None
                         start = time.time()
@@ -281,6 +288,7 @@ if __name__ == "__main__":
                                     robot.SetActiveDOFValues(pose)
                                     robottrans = robot.GetManipulator("arm").GetTransform()
                                     p = (robottrans[0][3], robottrans[1][3], v-math.pi/2)
+                                    IPython.embed()
                                     #print "Hand Pose:"
                                     #print p
                                     #print "Goals Samples:"
@@ -291,7 +299,6 @@ if __name__ == "__main__":
                                         gSamples = (goalSampleTrans[0][3], goalSampleTrans[1][3], 1)
                                         #print gSamples
                                         successes.append(CR.isInCaptureRegion(p, a, gSamples))
-                                        #IPython.embed()
                                         if (successes[i][0] == False):
                                             break
                                         i = i + 1
@@ -311,7 +318,7 @@ if __name__ == "__main__":
                                         print (time.time()-start)
                                         data_file.write("\n%f" %(time.time()-start))
                                         start = time.time()
-                                        #IPython.embed() 
+                                        IPython.embed() 
                                         break
                                         #time.sleep(1)
 
@@ -325,9 +332,8 @@ if __name__ == "__main__":
 
                         if push is None:
                             data_file.write("\nFail")
-                    data_file.close()
-                    data_file2.close()
-    #data_file.close()
+
+                        data_file.close()
     # IPython.embed() 
 
 
